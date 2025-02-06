@@ -1,8 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
-// Importation du modèle Book
-const Book = require("./models/Book");
+const bookRoutes = require("./routes/bookRoutes");
+const userRoutes = require("./routes/user");
 
 const app = express();
 
@@ -26,34 +26,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Route de test
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Votre serveur fonctionne correctement!" });
-});
-
-// Routes pour tests CRUD sur POSTMAN
-app.post("/api/books", (req, res) => {
-  const book = new Book({
-    ...req.body,
-  });
-  book
-    .save()
-    .then(() => res.status(201).json({ message: "Livre enregistré !" }))
-    .catch((error) => res.status(400).json({ error }));
-});
-
-// Récupérer tous les livres
-app.get("/api/books", (req, res) => {
-  Book.find()
-    .then((books) => res.status(200).json(books))
-    .catch((error) => res.status(400).json({ error }));
-});
-
-// Supprimer un livre
-app.delete("/api/books/:id", (req, res) => {
-  Book.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Livre supprimé !" }))
-    .catch((error) => res.status(400).json({ error }));
-});
+// Routes
+app.use("/api/books", bookRoutes);
+app.use("/api/auth", userRoutes);
 
 module.exports = app;
