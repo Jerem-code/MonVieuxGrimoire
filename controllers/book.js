@@ -9,9 +9,15 @@ exports.getAllBooks = (req, res) => {
 
 // Créer un nouveau livre
 exports.createBook = (req, res) => {
+  const bookObject = JSON.parse(req.body.book);
   const book = new Book({
-    ...req.body,
+    ...bookObject,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${
+      req.file.filename
+    }`,
   });
+
   book
     .save()
     .then(() => res.status(201).json({ message: "Livre enregistré !" }))
@@ -27,7 +33,15 @@ exports.getOneBook = (req, res) => {
 
 // Modifier un livre
 exports.updateBook = (req, res) => {
-  const bookObject = { ...req.body, userId: req.auth.userId };
+  const bookObject = req.file
+    ? {
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+
   Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
     .then(() => res.status(200).json({ message: "Livre modifié !" }))
     .catch((error) => res.status(400).json({ error }));

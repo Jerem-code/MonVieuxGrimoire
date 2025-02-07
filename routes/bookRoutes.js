@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const bookCtrl = require("../controllers/book");
 const checkBookOwner = require("../middleware/checkBookOwner");
+const multer = require("../middleware/multer-config");
 
 // Route publique - Récupérer tous les livres
 router.get("/", bookCtrl.getAllBooks);
@@ -14,8 +15,8 @@ router.get("/:id", bookCtrl.getOneBook);
 router.get("/bestrating", bookCtrl.getBestRatedBooks);
 
 // Routes protégées
-router.post("/", auth, bookCtrl.createBook);
-router.put("/:id", auth, checkBookOwner, bookCtrl.updateBook);
+router.post("/", auth, multer, bookCtrl.createBook);
+router.put("/:id", auth, checkBookOwner, multer, bookCtrl.updateBook);
 router.delete("/:id", auth, checkBookOwner, bookCtrl.deleteBook);
 router.post("/:id/rating", auth, bookCtrl.rateBook);
 
