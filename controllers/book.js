@@ -65,7 +65,19 @@ exports.getBestRatedBooks = (req, res) => {
 
 // Noter un livre
 exports.rateBook = (req, res) => {
-  const { userId, rating } = req.body;
+  // Vérification plus stricte de l'authentification et des données
+  if (!req.auth || !req.auth.userId) {
+    return res.status(401).json({ message: "Utilisateur non authentifié" });
+  }
+
+  const { rating } = req.body;
+
+  // Validation de la note
+  if (rating === undefined || rating < 0 || rating > 5) {
+    return res.status(400).json({ message: "Note invalide" });
+  }
+
+  const userId = req.auth.userId;
 
   Book.findOne({ _id: req.params.id })
     .then((book) => {
@@ -73,10 +85,8 @@ exports.rateBook = (req, res) => {
         return res.status(404).json({ message: "Livre non trouvé" });
       }
 
-      // Vérifier si l'utilisateur a déjà noté ce livre
-      const userRating = book.ratings.find(
-        (rating) => rating.userId === userId
-      );
+      // Vérification si l'utilisateur a déjà noté ce livre
+      const userRating = book.ratings.find((r) => r.userId === userId);
       if (userRating) {
         return res
           .status(400)
@@ -88,11 +98,11 @@ exports.rateBook = (req, res) => {
 
       // Calculer la nouvelle moyenne
       const totalRatings = book.ratings.reduce((sum, r) => sum + r.grade, 0);
-      book.averageRating = totalRatings / book.ratings.length;
+      book.averageRating =
+        Math.round((totalRatings / book.ratings.length) * 10) / 10;
 
-      // Sauvegarder les modifications
       return book.save();
     })
     .then((updatedBook) => res.status(200).json(updatedBook))
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => res.status(500).json({ error: error.message }));
 };

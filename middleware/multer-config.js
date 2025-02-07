@@ -1,4 +1,6 @@
 const multer = require("multer");
+const sharp = require("sharp");
+const path = require("path");
 
 const MIME_TYPES = {
   "image/jpg": "jpg",
@@ -17,4 +19,21 @@ const storage = multer.diskStorage({
   },
 });
 
-module.exports = multer({ storage: storage }).single("image");
+const optimizeImage = (req, res, next) => {
+  if (!req.file) return next();
+
+  sharp(req.file.path)
+    .resize(800, 600, { fit: "inside" })
+    .jpeg({ quality: 80 })
+    .toFile(path.join("images", "optimized_" + req.file.filename))
+    .then(() => {
+      req.file.filename = "optimized_" + req.file.filename;
+      next();
+    })
+    .catch((error) => next(error));
+};
+
+module.exports = {
+  upload: multer({ storage: storage }).single("image"),
+  optimizeImage,
+};
